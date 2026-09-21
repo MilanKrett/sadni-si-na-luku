@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sadni si na lúku — kvetnaté lúky namiesto trávnikov</title>
+<meta name="description" content="Sadni si na lúku: školy, detské domovy, centrá voľného času a bytovky v Banskobystrickom kraji premenia kus koseného trávnika na kvetnatú lúku s hmyzím hotelom, napájadlom a búdkami. Deti sledujú, koľko života sa vrátilo.">
+<link rel="icon" type="image/png" href="logo/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+:root{
+  --green:#3B6D11; --green-d:#2C520C; --green-l:#E4EFD6; --green-xl:#F1F6E9;
+  --sun:#F2B705; --sun-d:#C9950A; --sun-l:#FDF1C7; --clay:#E07A20;
+  --ink:#222A1B; --muted:#5F6950; --cream:#FBF8EF; --card:#FFFFFF; --line:#E1DCCB;
+  --r:18px; --serif:"Fraunces",Georgia,serif; --sans:"Nunito",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.6;font-size:17px}
+img{max-width:100%;display:block}
+a{color:var(--green-d)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--serif);line-height:1.12;margin:0 0 .45em;font-weight:700}
+h2{font-size:clamp(1.7rem,3.4vw,2.5rem)}
+h3{font-size:1.2rem}
+p{margin:0 0 1em}
+.muted{color:var(--muted)}
+.lead{font-size:1.12rem;max-width:720px}
+section{padding:72px 0}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:10px}
+.eyebrow::before{content:"";width:22px;height:3px;background:var(--sun);border-radius:2px}
+
+/* hlavička */
+header{background:var(--cream);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1000}
+.nav{display:flex;align-items:center;justify-content:space-between;height:70px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--serif);font-weight:700;font-size:1.15rem;white-space:nowrap}
+.brand img{width:40px;height:40px;border-radius:10px}
+.nav ul{list-style:none;margin:0;padding:0;display:flex;gap:22px}
+.nav ul a{text-decoration:none;color:var(--ink);font-weight:700;font-size:.95rem}
+.nav ul a:hover{color:var(--green)}
+.btn{display:inline-block;background:var(--green);color:#fff;font-weight:800;padding:13px 24px;border-radius:12px;text-decoration:none;border:0;cursor:pointer;font-family:inherit;font-size:1rem;transition:.15s;line-height:1.2}
+.btn:hover{background:var(--green-d)}
+.btn.sun{background:var(--sun);color:var(--ink)}
+.btn.sun:hover{background:var(--sun-d)}
+.btn.ghost{background:transparent;color:var(--green-d);border:2px solid var(--green)}
+.btn.ghost:hover{background:var(--green-l)}
+.btn.sm{padding:9px 16px;font-size:.9rem}
+.btn[disabled]{opacity:.6;cursor:wait}
+@media(max-width:860px){.nav ul{display:none}}
+
+/* hero */
+.hero{padding:64px 0 0;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center}
+.hero h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800;letter-spacing:-.01em}
+.hero h1 em{font-style:italic;color:var(--green)}
+.hero .lead{font-size:1.18rem}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 28px}
+.facts{display:flex;gap:10px;flex-wrap:wrap}
+.fact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:.9rem}
+.fact b{font-family:var(--serif);font-size:1.25rem;color:var(--green);display:block;line-height:1.1}
+.meadow-art{width:100%;height:auto}
+@media(max-width:860px){.hero .wrap{grid-template-columns:1fr}.hero{padding-top:40px}}
+.strip{height:14px;background:repeating-linear-gradient(90deg,var(--green) 0 40px,var(--sun) 40px 52px,var(--green-l) 52px 80px);margin-top:48px}
+
+/* karty */
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px}
+.card h3{margin-bottom:8px}
+.card p:last-child{margin-bottom:0}
+.big{font-family:var(--serif);font-size:2.6rem;font-weight:800;color:var(--green);line-height:1;margin-bottom:8px}
+.big small{font-size:1.1rem;color:var(--muted);font-weight:600}
+.src{font-size:.8rem;color:var(--muted)}
+
+/* porovnanie */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;margin-top:28px}
+.vs .card.lawn{border-top:6px solid #9AA58A}
+.vs .card.meadow{border-top:6px solid var(--sun)}
+.vs .mid{display:flex;align-items:center;font-family:var(--serif);font-weight:800;color:var(--muted);font-size:1.4rem}
+.vs ul{margin:0;padding-left:20px}
+.vs li{margin-bottom:6px}
+@media(max-width:700px){.vs{grid-template-columns:1fr}.vs .mid{justify-content:center}}
+
+/* anatómia lúky */
+.anat{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
+@media(max-width:860px){.anat{grid-template-columns:1fr}}
+.anat-svg{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:var(--r)}
+.hot{cursor:pointer}
+.hot circle.ring{fill:var(--sun);stroke:#fff;stroke-width:3;transition:.15s}
+.hot text{font-family:var(--sans);font-weight:800;font-size:15px;fill:var(--ink);pointer-events:none}
+.hot:hover circle.ring,.hot.on circle.ring{fill:var(--clay);r:17}
+.anat-info{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px;min-height:260px}
+.anat-info .tag{display:inline-block;background:var(--sun-l);color:#7A5A00;font-weight:800;font-size:.75rem;padding:4px 10px;border-radius:999px;margin-bottom:8px}
+.anat-info dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:12px 0 0;font-size:.92rem}
+.anat-info dt{color:var(--muted);font-weight:700}
+.anat-info dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+.chip.on,.chip:hover{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* kroky + rok */
+.step{display:grid;grid-template-columns:56px 1fr;gap:16px;padding:18px 0;border-top:1px solid var(--line)}
+.step:last-child{border-bottom:1px solid var(--line)}
+.step .n{width:48px;height:48px;border-radius:50%;background:var(--sun);color:var(--ink);font-family:var(--serif);font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center}
+.step h3{margin-bottom:4px}
+.step p{margin:0}
+.year{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:28px}
+.mo{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 8px;font-size:.78rem;min-height:110px;line-height:1.35}
+.mo b{display:block;font-family:var(--serif);font-size:1rem;color:var(--green);margin-bottom:4px}
+.mo.sow{background:var(--sun-l);border-color:#E8CC6E}
+.mo.mow{background:var(--green-l);border-color:#BFD49D}
+.mo.bloom{background:#FFF4EA;border-color:#F3C8A0}
+.ylegend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;margin-top:12px}
+.ylegend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px;border:1px solid var(--line)}
+@media(max-width:900px){.year{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:520px){.year{grid-template-columns:repeat(2,1fr)}}
+
+/* kalkulačka */
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:860px){.calc{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px}
+.panel h3{margin-bottom:14px}
+input[type=range]{width:100%;accent-color:var(--green);padding:0;border:0}
+.rng{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)}
+.out{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.o{background:var(--green-xl);border-radius:12px;padding:12px 14px}
+.o b{display:block;font-family:var(--serif);font-size:1.5rem;color:var(--green);line-height:1.1}
+.o span{font-size:.82rem;color:var(--muted)}
+.o.sun{background:var(--sun-l)}.o.sun b{color:#7A5A00}
+.m2{font-family:var(--serif);font-size:2.2rem;font-weight:800;color:var(--green);line-height:1}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:#fff;transition:.12s;font-weight:400}
+.opt:has(input:checked){border-color:var(--green);background:var(--green-xl)}
+.opt input{width:20px;height:20px;accent-color:var(--green);margin:0}
+.opt small{display:block;color:var(--muted);font-size:.8rem}
+.opt .pr{font-weight:800;white-space:nowrap}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--green);margin-top:14px;padding-top:12px;font-weight:800}
+.total b{font-family:var(--serif);font-size:1.7rem;color:var(--green)}
+.note{font-size:.85rem;color:var(--muted);margin:10px 0 0}
+
+/* mapa */
+#map{height:420px;border-radius:var(--r);border:1px solid var(--line);z-index:1}
+.sites{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+@media(max-width:800px){.sites{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.sites{grid-template-columns:1fr}}
+.site{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}
+.site:hover{border-color:var(--green)}
+.st{font-size:.72rem;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.st.pilot{background:var(--sun-l);color:#7A5A00}
+.st.open{background:var(--green-l);color:var(--green-d)}
+.leaflet-popup-content{font-family:var(--sans);font-size:.92rem;line-height:1.45}
+.leaflet-popup-content b{font-family:var(--serif);font-size:1.05rem;display:block;margin-bottom:4px}
+
+/* prieskum */
+table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;font-size:.95rem}
+table.t th{background:var(--green);color:#fff;text-align:left;padding:11px 14px;font-weight:800}
+table.t td{padding:10px 14px;border-top:1px solid var(--line);vertical-align:top}
+table.t tr:nth-child(even) td{background:var(--green-xl)}
+.tbl-wrap{overflow-x:auto}
+
+/* dopad */
+.impact{background:var(--green-d);color:#fff}
+.impact .eyebrow{color:var(--sun)}
+.impact .card{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);color:#fff}
+.impact .big{color:var(--sun)}
+.impact a{color:#fff}
+.impact .card p{opacity:.92}
+
+/* formulár */
+form{display:grid;gap:12px}
+[hidden]{display:none!important}
+label{font-weight:700;font-size:.92rem}
+input,select,textarea{width:100%;padding:12px 13px;border:1px solid #C9C3AE;border-radius:12px;font:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:100px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.two{grid-template-columns:1fr}}
+.thanks{display:none;background:var(--sun-l);border:1px solid var(--sun);border-radius:var(--r);padding:22px}
+.thanks.on{display:block}
+.thanks p:last-child{margin-bottom:0}
+.err{display:none;color:#A33;font-size:.9rem}
+.err.on{display:block}
+.side-note{background:var(--green-xl);border-radius:var(--r);padding:24px}
+.side-note ul{padding-left:20px;margin:0}
+.side-note li{margin-bottom:8px}
+
+footer{padding:36px 0;border-top:1px solid var(--line);font-size:.9rem;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#"><img src="logo/logo-mark.png" alt="Sadni si na lúku">Sadni si na lúku</a>
+    <ul>
+      <li><a href="#preco">Prečo</a></li>
+      <li><a href="#luka">Čo je na lúke</a></li>
+      <li><a href="#ako">Ako to funguje</a></li>
+      <li><a href="#kalkulacka">Kalkulačka</a></li>
+      <li><a href="#kde">Kde</a></li>
+      <li><a href="#prieskum">Prieskum druhov</a></li>
+    </ul>
+    <a class="btn sun sm" href="#chcem">Chcem lúku</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Banskobystrický kraj · školský rok 2026/2027</span>
+      <h1>Trávnik je zelená púšť. <em>Lúka je domov.</em></h1>
+      <p class="lead">Školy, detské domovy, centrá voľného času a bytovky premenia kus koseného trávnika na kvetnatú lúku: dosejeme regionálne semená, kosíme len dvakrát do roka a deti postavia hmyzí hotel, napájadlo a búdky. Potom už len sledujú, koľko života sa vrátilo.</p>
+      <div class="cta">
+        <a class="btn" href="#chcem">Chcem lúku pri našej škole</a>
+        <a class="btn ghost" href="#luka">Pozrieť, čo je na lúke</a>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>−76 %</b>lietajúceho hmyzu v Európe za 27 rokov</div>
+        <div class="fact"><b>2×</b>ročne kosíme namiesto 7×</div>
+        <div class="fact"><b>15 lúk</b>v kraji v prvom roku</div>
+      </div>
+    </div>
+    <div>
+      <svg class="meadow-art" viewBox="0 0 520 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustrácia kvetnatej lúky s hmyzím hotelom">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EAF3FB"/><stop offset="1" stop-color="#FBF8EF"/></linearGradient>
+          <g id="flower"><line x1="0" y1="0" x2="0" y2="-38" stroke="#3B6D11" stroke-width="3"/><circle cx="0" cy="-46" r="9" fill="#F2B705"/><circle cx="0" cy="-46" r="3.5" fill="#E07A20"/></g>
+          <g id="flower2"><line x1="0" y1="0" x2="0" y2="-30" stroke="#3B6D11" stroke-width="3"/><circle cx="0" cy="-36" r="7" fill="#fff"/><circle cx="0" cy="-36" r="2.5" fill="#F2B705"/></g>
+          <g id="flower3"><line x1="0" y1="0" x2="0" y2="-44" stroke="#3B6D11" stroke-width="3"/><ellipse cx="0" cy="-52" rx="6" ry="10" fill="#A56BB5"/></g>
+          <g id="flower4"><line x1="0" y1="0" x2="0" y2="-26" stroke="#3B6D11" stroke-width="3"/><circle cx="0" cy="-31" r="6" fill="#E45D5D"/></g>
+        </defs>
+        <rect width="520" height="400" rx="18" fill="url(#sky)"/>
+        <circle cx="440" cy="70" r="34" fill="#F2B705" opacity=".9"/>
+        <path d="M0 250 Q130 215 260 240 T520 235 V400 H0Z" fill="#7BA84A"/>
+        <path d="M0 290 Q150 260 300 285 T520 280 V400 H0Z" fill="#3B6D11"/>
+        <g transform="translate(372,150)">
+          <rect x="0" y="0" width="88" height="96" fill="#B7864F" stroke="#7A5530" stroke-width="3"/>
+          <polygon points="-8,0 44,-34 96,0" fill="#7A5530"/>
+          <line x1="44" y1="0" x2="44" y2="96" stroke="#7A5530" stroke-width="3"/>
+          <line x1="0" y1="48" x2="88" y2="48" stroke="#7A5530" stroke-width="3"/>
+          <g fill="#5E3E1E"><circle cx="12" cy="14" r="4"/><circle cx="24" cy="24" r="3"/><circle cx="34" cy="12" r="3.5"/><circle cx="14" cy="34" r="3"/><circle cx="30" cy="36" r="4"/></g>
+          <g fill="#E3C58E"><rect x="52" y="8" width="8" height="32"/><rect x="64" y="8" width="8" height="32"/><rect x="76" y="8" width="6" height="32"/></g>
+          <g fill="#C86A3A"><rect x="6" y="56" width="34" height="14"/><rect x="6" y="74" width="34" height="14"/></g>
+          <g fill="#8AA36B"><circle cx="58" cy="62" r="5"/><circle cx="72" cy="70" r="6"/><circle cx="62" cy="84" r="5"/><circle cx="80" cy="86" r="4"/></g>
+          <rect x="34" y="96" width="20" height="30" fill="#7A5530"/>
+        </g>
+        <use href="#flower" x="60" y="300"/><use href="#flower2" x="95" y="310"/><use href="#flower3" x="130" y="300"/><use href="#flower" x="175" y="315"/>
+        <use href="#flower4" x="210" y="305"/><use href="#flower2" x="245" y="318"/><use href="#flower" x="285" y="300"/><use href="#flower3" x="320" y="312"/>
+        <use href="#flower2" x="30" y="345"/><use href="#flower4" x="70" y="355"/><use href="#flower" x="110" y="350"/><use href="#flower3" x="155" y="360"/>
+        <use href="#flower2" x="200" y="352"/><use href="#flower" x="240" y="362"/><use href="#flower4" x="280" y="348"/><use href="#flower2" x="330" y="360"/>
+        <use href="#flower3" x="370" y="350"/><use href="#flower" x="410" y="358"/><use href="#flower2" x="450" y="345"/><use href="#flower4" x="490" y="356"/>
+        <g transform="translate(300,190)"><ellipse cx="0" cy="0" rx="14" ry="9" fill="#F2B705"/><path d="M-6 -9V9M0 -9V9M6 -9V9" stroke="#222A1B" stroke-width="3"/><ellipse cx="-4" cy="-11" rx="8" ry="5" fill="#fff" opacity=".8"/><ellipse cx="6" cy="-11" rx="8" ry="5" fill="#fff" opacity=".8"/></g>
+        <g transform="translate(200,230) scale(.7)"><ellipse cx="0" cy="0" rx="14" ry="9" fill="#F2B705"/><path d="M-6 -9V9M0 -9V9M6 -9V9" stroke="#222A1B" stroke-width="3"/><ellipse cx="-4" cy="-11" rx="8" ry="5" fill="#fff" opacity=".8"/><ellipse cx="6" cy="-11" rx="8" ry="5" fill="#fff" opacity=".8"/></g>
+        <g transform="translate(110,215)"><path d="M0 0C-16 -18 -26 -4 -6 4Z M0 0C16 -18 26 -4 6 4Z M0 0C-14 14 -22 6 -6 2Z M0 0C14 14 22 6 6 2Z" fill="#E07A20"/><line x1="0" y1="-8" x2="0" y2="8" stroke="#222A1B" stroke-width="2"/></g>
+        <g transform="translate(40,275)"><ellipse cx="30" cy="8" rx="30" ry="9" fill="#7A5530"/><ellipse cx="30" cy="5" rx="26" ry="6" fill="#8EC5E6"/><circle cx="20" cy="4" r="3" fill="#B7864F"/><circle cx="36" cy="6" r="2.5" fill="#B7864F"/></g>
+      </svg>
+    </div>
+  </div>
+  <div class="strip"></div>
+</section>
+
+<section id="preco">
+  <div class="wrap">
+    <span class="eyebrow">Prečo to robíme</span>
+    <h2>Okolo škôl a bytoviek sú hektáre trávnika, ktorý nič neživí</h2>
+    <p class="lead">Kosený trávnik vyzerá upravene, ale pre opeľovačov je to púšť: bez kvetov, bez úkrytu, bez vody. Stojí peniaze na kosenie a v lete sa rozpáli. Stačí prestať kosiť, dosiať regionálne semená a trochu pomôcť — a mŕtva plocha ožije. A chceme, aby to deti videli na vlastné oči, nie v učebnici.</p>
+    <div class="grid g3" style="margin-top:28px">
+      <div class="card"><div class="big">−76 %</div><h3>Menej lietajúceho hmyzu</h3><p>Toľko ubudlo biomasy lietajúceho hmyzu v chránených územiach Nemecka za 27 rokov. Bez opeľovačov nie je ovocie, zelenina ani vtáky, ktoré sa hmyzom živia.</p><p class="src">Hallmann a kol., PLOS ONE 2017</p></div>
+      <div class="card"><div class="big">650+</div><h3>Druhov divých včiel</h3><p>Toľko druhov včiel žije na Slovensku — väčšina z nich sú včely samotárky, ktoré hniezdia v dutých steblách, dreve alebo holom piesku. Na kosenom trávniku nemajú ani kvety, ani kde bývať.</p><p class="src">údaj Slovenskej entomologickej spoločnosti</p></div>
+      <div class="card"><div class="big">7× <small>→ 2×</small></div><h3>Kosenie za rok</h3><p>Bežný trávnik pri škole sa kosí šesť- až osemkrát za sezónu. Kvetnatá lúka len dvakrát — v júni a v septembri. Menej práce, menej paliva, menej hluku a chladnejší dvor v horúčavách.</p></div>
+    </div>
+
+    <div class="vs">
+      <div class="card lawn">
+        <h3>Kosený trávnik</h3>
+        <ul>
+          <li>5 – 10 druhov rastlín, takmer bez kvetov</li>
+          <li>kosenie 6 – 8× ročne, každé s benzínom a hlukom</li>
+          <li>v lete rozpálený a vyschnutý</li>
+          <li>hmyz, ježko ani jašterica sa nemajú kam skryť</li>
+          <li>deti sa o prírode dozvedia z učebnice</li>
+        </ul>
+      </div>
+      <div class="mid">→</div>
+      <div class="card meadow">
+        <h3>Kvetnatá lúka</h3>
+        <ul>
+          <li>25 – 50 druhov rastlín, kvitne od apríla do októbra</li>
+          <li>kosenie 2× ročne, seno ide na kompost</li>
+          <li>vysoký porast tieni pôdu — chladnejšia a vlhkejšia</li>
+          <li>hmyzí hotel, kamene, drevo a piesok = úkryty pre desiatky druhov</li>
+          <li>deti sledujú a zapisujú, čo sa na lúku vrátilo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="luka" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <span class="eyebrow">Čo je na každej lúke</span>
+    <h2>Anatómia lúky — kliknite na číslo</h2>
+    <p class="lead">Lúka nie je len nepokosená tráva. Na každej ploche pribudne sedem prvkov, ktoré deti samy postavia z dreva, bambusu, tehál a kameňov. Každý má svojich obyvateľov.</p>
+    <div class="anat">
+      <svg class="anat-svg" id="anat" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg">
+        <rect width="700" height="420" fill="#F1F6E9"/>
+        <path d="M0 290 Q175 260 350 285 T700 280 V420 H0Z" fill="#7BA84A"/>
+        <path d="M0 330 Q200 300 400 325 T700 320 V420 H0Z" fill="#3B6D11"/>
+        <g transform="translate(70,150)"><rect x="0" y="0" width="76" height="110" fill="#B7864F" stroke="#7A5530" stroke-width="3"/><polygon points="-8,0 38,-30 84,0" fill="#7A5530"/><line x1="38" y1="0" x2="38" y2="110" stroke="#7A5530" stroke-width="3"/><line x1="0" y1="55" x2="76" y2="55" stroke="#7A5530" stroke-width="3"/><g fill="#5E3E1E"><circle cx="12" cy="14" r="4"/><circle cx="26" cy="26" r="3"/><circle cx="14" cy="40" r="3.5"/></g><g fill="#E3C58E"><rect x="46" y="8" width="7" height="38"/><rect x="57" y="8" width="7" height="38"/><rect x="68" y="8" width="5" height="38"/></g><g fill="#C86A3A"><rect x="6" y="62" width="26" height="12"/><rect x="6" y="80" width="26" height="12"/></g><g fill="#8AA36B"><circle cx="52" cy="70" r="6"/><circle cx="66" cy="84" r="6"/></g><rect x="28" y="110" width="20" height="40" fill="#7A5530"/></g>
+        <g transform="translate(200,225)"><rect x="0" y="0" width="60" height="44" fill="#C69C6D" stroke="#7A5530" stroke-width="3"/><g fill="#5E3E1E"><circle cx="12" cy="12" r="3.5"/><circle cx="26" cy="12" r="3.5"/><circle cx="40" cy="12" r="3.5"/><circle cx="12" cy="26" r="3.5"/><circle cx="26" cy="26" r="3.5"/><circle cx="40" cy="26" r="3.5"/><circle cx="19" cy="36" r="3"/><circle cx="33" cy="36" r="3"/><circle cx="48" cy="34" r="3"/></g><rect x="24" y="44" width="12" height="60" fill="#7A5530"/></g>
+        <g transform="translate(300,330)"><ellipse cx="60" cy="14" rx="60" ry="16" fill="#E8D5A3"/><ellipse cx="60" cy="10" rx="50" ry="10" fill="#F1E3BD"/><circle cx="45" cy="8" r="2" fill="#7A5530"/><circle cx="70" cy="12" r="2" fill="#7A5530"/></g>
+        <g transform="translate(450,260)"><rect x="10" y="30" width="90" height="14" rx="6" fill="#8B6238"/><rect x="0" y="44" width="110" height="12" rx="6" fill="#7A5530"/><circle cx="30" cy="22" r="14" fill="#9C9C93"/><circle cx="58" cy="18" r="17" fill="#B0B0A6"/><circle cx="86" cy="24" r="12" fill="#8E8E85"/><circle cx="46" cy="4" r="10" fill="#C2C2B8"/></g>
+        <g transform="translate(560,335)"><ellipse cx="40" cy="12" rx="40" ry="12" fill="#7A5530"/><ellipse cx="40" cy="8" rx="34" ry="8" fill="#8EC5E6"/><circle cx="26" cy="7" r="4" fill="#B7864F"/><circle cx="48" cy="9" r="3.5" fill="#B7864F"/><circle cx="38" cy="5" r="3" fill="#C9A276"/></g>
+        <g transform="translate(560,60)"><rect x="0" y="40" width="40" height="46" fill="#B7864F" stroke="#7A5530" stroke-width="3"/><polygon points="-6,40 20,18 46,40" fill="#7A5530"/><circle cx="20" cy="58" r="6" fill="#5E3E1E"/><rect x="17" y="86" width="6" height="140" fill="#7A5530"/></g>
+        <g transform="translate(615,95)"><rect x="0" y="20" width="30" height="60" fill="#5E3E1E" stroke="#3E2A14" stroke-width="3"/><rect x="0" y="12" width="30" height="8" fill="#3E2A14"/><line x1="0" y1="78" x2="30" y2="78" stroke="#C69C6D" stroke-width="3"/></g>
+        <g transform="translate(330,120)"><rect x="0" y="0" width="120" height="80" rx="6" fill="#fff" stroke="#7A5530" stroke-width="3"/><rect x="10" y="10" width="60" height="8" fill="#3B6D11"/><rect x="10" y="26" width="100" height="5" fill="#C9C3AE"/><rect x="10" y="37" width="90" height="5" fill="#C9C3AE"/><rect x="10" y="48" width="100" height="5" fill="#C9C3AE"/><rect x="10" y="59" width="70" height="5" fill="#C9C3AE"/><circle cx="98" cy="14" r="8" fill="#F2B705"/><rect x="54" y="80" width="12" height="210" fill="#7A5530"/></g>
+        <g stroke="#3B6D11" stroke-width="3"><line x1="150" y1="360" x2="150" y2="325"/><line x1="260" y1="375" x2="260" y2="340"/><line x1="420" y1="385" x2="420" y2="352"/><line x1="40" y1="385" x2="40" y2="352"/><line x1="660" y1="395" x2="660" y2="365"/><line x1="520" y1="400" x2="520" y2="370"/></g>
+        <g><circle cx="150" cy="318" r="9" fill="#F2B705"/><circle cx="150" cy="318" r="3.5" fill="#E07A20"/><circle cx="260" cy="333" r="7" fill="#fff"/><circle cx="260" cy="333" r="2.5" fill="#F2B705"/><ellipse cx="420" cy="344" rx="6" ry="10" fill="#A56BB5"/><circle cx="40" cy="345" r="7" fill="#E45D5D"/><circle cx="660" cy="358" r="8" fill="#F2B705"/><circle cx="660" cy="358" r="3" fill="#E07A20"/><circle cx="520" cy="363" r="7" fill="#fff"/><circle cx="520" cy="363" r="2.5" fill="#F2B705"/></g>
+        <g class="hot" data-k="0"><circle class="ring" cx="108" cy="120" r="15"/><text x="108" y="125" text-anchor="middle">1</text></g>
+        <g class="hot" data-k="1"><circle class="ring" cx="230" cy="205" r="15"/><text x="230" y="210" text-anchor="middle">2</text></g>
+        <g class="hot" data-k="2"><circle class="ring" cx="360" cy="312" r="15"/><text x="360" y="317" text-anchor="middle">3</text></g>
+        <g class="hot" data-k="3"><circle class="ring" cx="505" cy="240" r="15"/><text x="505" y="245" text-anchor="middle">4</text></g>
+        <g class="hot" data-k="4"><circle class="ring" cx="600" cy="318" r="15"/><text x="600" y="323" text-anchor="middle">5</text></g>
+        <g class="hot" data-k="5"><circle class="ring" cx="580" cy="50" r="15"/><text x="580" y="55" text-anchor="middle">6</text></g>
+        <g class="hot" data-k="6"><circle class="ring" cx="390" cy="100" r="15"/><text x="390" y="105" text-anchor="middle">7</text></g>
+      </svg>
+      <div>
+        <div class="anat-info" id="anat-info"></div>
+        <div class="chips" id="anat-chips"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ako">
+  <div class="wrap">
+    <span class="eyebrow">Ako to funguje</span>
+    <h2>Od trávnika k lúke v štyroch krokoch</h2>
+    <div class="grid g2" style="align-items:start">
+      <div class="steps">
+        <div class="step"><div class="n">1</div><div><h3>Škola alebo bytovka si vyberie plochu</h3><p>Stačí 100 – 500 m² trávnika, ktorý nikto nepoužíva na hry: pás pri plote, svah, roh dvora. Vyplníte krátky formulár, prídem sa pozrieť a spolu plochu vymeriame.</p></div></div>
+        <div class="step"><div class="n">2</div><div><h3>Dostanete štartovací balíček</h3><p>Regionálne lúčne semená na celú plochu, materiál na hmyzí hotel a domčeky pre včely, búdky, napájadlo, informačnú tabuľu a jednoduchý návod krok za krokom. Balíček pre 200 m² stojí 250 € a školu nič nestojí.</p></div></div>
+        <div class="step"><div class="n">3</div><div><h3>Deti lúku založia a postavia jej „nábytok“</h3><p>Jeseň alebo skorá jar: trávnik sa naposledy nízko pokosí, zdrapí, doseje a prvýkrát sa nechá rásť. Na dielni deti vŕtajú bloky pre včely, plnia hmyzí hotel a ukladajú kamene. Dve popoludnia, žiadne špeciálne náradie.</p></div></div>
+        <div class="step"><div class="n">4</div><div><h3>Sledujú, koľko života sa vrátilo</h3><p>Raz mesačne deti zaznamenajú, čo na lúke našli, do aplikácie iNaturalist — tá druh rozpozná a zápis ide do celosvetovej databázy. Na mape projektu tak každá lúka ukazuje počet nájdených druhov: pred a po.</p></div></div>
+      </div>
+      <div class="side-note">
+        <h3>Rok na lúke</h3>
+        <p>Lúka žije podľa kalendára, nie podľa rozvrhu. Takto vyzerá prvý rok, ak sa seje na jeseň:</p>
+        <ul>
+          <li><b>Október:</b> posledné nízke kosenie, zdrapenie, výsev, dielňa — hmyzí hotel a domčeky.</li>
+          <li><b>November – február:</b> semená ležia v pôde; deti vešajú búdky, stavajú hromadu kameňov a dreva. Prvý zápis „pred“ do iNaturalistu.</li>
+          <li><b>Marec – máj:</b> prvé klíčky a prvé kvety (nevädza, mak, margaréta), prvé včely samotárky v domčekoch. Napájadlo ide von.</li>
+          <li><b>Jún:</b> „Deň na lúke“ — spoločné pozorovanie hmyzu s lupami a určovacími kartami, prvé kosenie po odkvitnutí.</li>
+          <li><b>Júl – august:</b> druhá vlna kvitnutia, najviac motýľov a kobyliek.</li>
+          <li><b>September:</b> druhé kosenie, seno na kompost, zápis „po“ a porovnanie počtu druhov.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="year" id="year"></div>
+    <div class="ylegend"><span><i style="background:var(--sun-l)"></i>výsev a stavba</span><span><i style="background:#FFF4EA"></i>kvitnutie a pozorovanie</span><span><i style="background:var(--green-l)"></i>kosenie</span></div>
+  </div>
+</section>
+
+<section id="kalkulacka" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <span class="eyebrow">Vyskúšajte si to</span>
+    <h2>Kalkulačka lúky a konfigurátor balíčka</h2>
+    <p class="lead">Koľko semien treba, čo sa ušetrí na kosení a koľko druhov sa dá čakať? Posuňte výmeru plochy a zostavte si vlastný balíček.</p>
+    <div class="calc">
+      <div class="panel">
+        <h3>Koľko lúky chcete?</h3>
+        <div class="m2"><span id="m2">200</span> m²</div>
+        <p class="muted" style="font-size:.9rem" id="m2cmp">približne polovica školského ihriska na vybíjanú</p>
+        <input type="range" id="area" min="50" max="1000" step="10" value="200" aria-label="Výmera lúky v m²">
+        <div class="rng"><span>50 m²</span><span>1 000 m²</span></div>
+        <div class="out">
+          <div class="o"><b id="o-seed">800 g</b><span>regionálnych semien (4 g/m²)</span></div>
+          <div class="o"><b id="o-seedcost">80 €</b><span>cena semien (100 €/kg)</span></div>
+          <div class="o sun"><b id="o-mow">5 kosení</b><span>ušetrených ročne</span></div>
+          <div class="o sun"><b id="o-fuel">1,3 l</b><span>benzínu a <span id="o-co2">3 kg</span> CO₂ ročne menej</span></div>
+          <div class="o"><b id="o-species">25</b><span>druhov rastlín po 2 rokoch (odhad; trávnik má 5 – 10)</span></div>
+          <div class="o"><b id="o-insects">50+</b><span>druhov hmyzu, ktoré sa dajú čakať</span></div>
+        </div>
+        <p class="note">Odhady vychádzajú z bežných hodnôt: výsev 4 g/m², kosenie trávnika 7× ročne, 1 hodina kosačky na 800 m², 2,3 kg CO₂ na liter benzínu. Počet druhov závisí od pôdy a okolia.</p>
+      </div>
+      <div class="panel">
+        <h3>Zostavte si balíček</h3>
+        <div class="opts" id="opts"></div>
+        <div class="total"><span>Balíček pre <span id="t-m2">200</span> m² spolu</span><b id="t-sum">250 €</b></div>
+        <p class="note">Semená sa počítajú podľa výmery vľavo. Materiál na hromadu kameňov a dreva je zadarmo — nájde sa v každom dvore alebo na stavbe. Pre školy, detské domovy a CVČ je balíček bezplatný; bytovka si ho môže uhradiť z fondu opráv.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kde">
+  <div class="wrap">
+    <span class="eyebrow">Kde začíname</span>
+    <h2>15 lúk v Banskobystrickom kraji v prvom roku</h2>
+    <p class="lead">Prvú lúku zakladáme s partiou kamarátov v Rimavskej Sobote na jeseň 2026. V každom okresnom meste kraja hľadáme aspoň jednu školu, detský domov, centrum voľného času alebo bytovku — kliknite na mesto a prihláste sa.</p>
+    <div id="map"></div>
+    <div class="sites" id="sites"></div>
+  </div>
+</section>
+
+<section id="prieskum" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <span class="eyebrow">Prieskum druhov</span>
+    <h2>Deti robia skutočný výskum — a výsledok je verejný</h2>
+    <div class="grid g2" style="align-items:start">
+      <div>
+        <p>Každá lúka má v aplikácii iNaturalist vlastný projekt. Deti raz mesačne prejdú lúku s mobilom, zaznamenajú, čo našli, a aplikácia druh rozpozná; overujú ho ďalší používatelia. Vzniká tak skutočný, verejne dostupný prieskum druhov, ktorý sa dá porovnať: koľko druhov bolo na trávniku pred výsevom a koľko ich je na lúke po roku a po dvoch.</p>
+        <p>Na mape projektu bude pri každej lúke jedno číslo, ktoré rozhoduje: <b>koľko druhov sa vrátilo</b>. Na konci školského roka vyhlásime <b>Lúku roka</b> — nie tú najväčšiu, ale tú, kde pribudlo najviac života.</p>
+        <p>Do vyučovania to zapadá bez násilia: biológia (opeľovanie, potravové reťazce, bioindikátory), chémia a fyzika (teplota a vlhkosť pôdy pod trávnikom a pod lúkou), geografia (mapa, súradnice), informatika (práca s otvorenými dátami), výtvarná a technická výchova (dielňa, tabuľa). Hodina na lúke sa vykazuje ako environmentálna výchova — prierezová téma štátneho vzdelávacieho programu.</p>
+      </div>
+      <div class="tbl-wrap">
+        <table class="t">
+          <tr><th>Čo meriame</th><th>Trávnik (pred)</th><th>Lúka po 2 rokoch (cieľ)</th></tr>
+          <tr><td>Druhy rastlín</td><td>5 – 10</td><td>25 a viac</td></tr>
+          <tr><td>Druhy hmyzu zapísané v iNaturalist</td><td>do 10</td><td>50 a viac</td></tr>
+          <tr><td>Obsadené trubičky v hmyzom hoteli</td><td>—</td><td>aspoň polovica</td></tr>
+          <tr><td>Teplota pri zemi v horúci deň</td><td>meriame</td><td>o niekoľko °C nižšia ako na trávniku</td></tr>
+          <tr><td>Kosenie za rok</td><td>6 – 8×</td><td>2×</td></tr>
+          <tr><td>Obsadené búdky (vtáky, netopiere)</td><td>—</td><td>aspoň 1 z 2</td></tr>
+        </table>
+        <p class="note">Meranie teploty: obyčajný teplomer položený na 10 minút na zem v trávniku a v lúke v ten istý deň. Deti tak samy vidia, prečo sa sídlisko v lete prehrieva.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="impact">
+  <div class="wrap">
+    <span class="eyebrow">Čo to prinesie</span>
+    <h2>Ciele prvého roka</h2>
+    <div class="grid g4">
+      <div class="card"><div class="big">15</div><p>lúk v Banskobystrickom kraji — pri školách, detských domovoch, centrách voľného času a bytovkách; spolu okolo 3 000 m² nového domova pre opeľovače.</p></div>
+      <div class="card"><div class="big">600+</div><p>detí, ktoré lúku samy založili, postavili jej hmyzí hotel a rok sledovali, čo sa na ňu vrátilo.</p></div>
+      <div class="card"><div class="big">75</div><p>kosení menej za rok (5 na každú lúku) — menej paliva, hluku a peňazí; seno namiesto toho živí školský kompost.</p></div>
+      <div class="card"><div class="big">1 000+</div><p>overených záznamov o druhoch v iNaturalist — prvé otvorené dáta o tom, koľko života dokáže vrátiť 200 m² trávnika.</p></div>
+    </div>
+    <p style="margin-top:22px;opacity:.9">Rozpočet celého prvého roka je 4 400 € — 250 € na lúku, dva spoločné „Dni na lúke“ a cesty po kraji. Web, mapa aj prieskum druhov bežia zadarmo. V druhom roku ponúkneme balíček každému kraju na Slovensku; návod je rovnaký pre školu v Brezne aj v Bratislave.</p>
+  </div>
+</section>
+
+<section id="chcem">
+  <div class="wrap">
+    <div class="grid g2" style="align-items:start">
+      <div>
+        <span class="eyebrow">Prihláška</span>
+        <h2>Chcem lúku pri našej škole, domove alebo bytovke</h2>
+        <p class="muted">Vyplnenie trvá minútu. Ozvem sa do týždňa, dohodneme si obhliadku plochy a termín výsevu. Balíček je pre školy, detské domovy a centrá voľného času bezplatný.</p>
+        <form id="f-luka">
+          <div class="two">
+            <div><label for="org">Škola / zariadenie / bytovka *</label><input id="org" name="organizacia" required placeholder="napr. ZŠ P. Dobšinského, Rimavská Sobota"></div>
+            <div><label for="typ">Typ</label><select id="typ" name="typ"><option>základná škola</option><option>stredná škola</option><option>materská škola</option><option>detský domov / centrum pre deti a rodiny</option><option>centrum voľného času</option><option>bytový dom / spoločenstvo vlastníkov</option><option>obec / úrad</option><option>iné</option></select></div>
+          </div>
+          <div class="two">
+            <div><label for="mesto">Mesto alebo obec *</label><input id="mesto" name="mesto" required></div>
+            <div><label for="plocha">Odhad plochy (m²)</label><input id="plocha" name="plocha_m2" type="number" min="20" placeholder="napr. 200"></div>
+          </div>
+          <div class="two">
+            <div><label for="meno">Kontaktná osoba *</label><input id="meno" name="meno" required></div>
+            <div><label for="email">E-mail *</label><input id="email" name="email" type="email" required></div>
+          </div>
+          <div><label for="sprava">Kde je plocha a kto by sa o lúku staral?</label><textarea id="sprava" name="sprava" placeholder="napr. pás trávnika pri plote za telocvičňou, starala by sa trieda 6.A s pani učiteľkou biológie"></textarea></div>
+          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+          <button class="btn" type="submit" id="send-btn">Odoslať prihlášku</button>
+          <p class="err" id="f-err">Odoslanie zlyhalo. Skúste to znova alebo mi napíšte priamo na <a href="mailto:sadnisinaluku@gmail.com">sadnisinaluku@gmail.com</a>.</p>
+        </form>
+        <div class="thanks" id="f-thanks">
+          <h3>Ďakujem, prihláška prišla! 🌼</h3>
+          <p id="f-thanks-text"></p>
+          <p>Potvrdenie ste dostali aj e-mailom. Ozvem sa do týždňa.</p>
+        </div>
+      </div>
+      <div>
+        <div class="side-note">
+          <h3>Kontakt</h3>
+          <p>Milan Krett · Rimavská Sobota<br>E-mail projektu: <a href="mailto:sadnisinaluku@gmail.com">sadnisinaluku@gmail.com</a></p>
+          <h3 style="margin-top:18px">Koho oslovujeme</h3>
+          <ul>
+            <li>základné, stredné a materské školy v Banskobystrickom kraji,</li>
+            <li>detské domovy (centrá pre deti a rodiny) a centrá voľného času,</li>
+            <li>spoločenstvá vlastníkov bytov a správcov sídlisk,</li>
+            <li>mestá a obce — správcov verejnej zelene,</li>
+            <li>Banskobystrický samosprávny kraj, Nadáciu Ekopolis (program Zelené oázy) a miestne firmy (drevo, piesok, tehly, odvoz sena).</li>
+          </ul>
+          <h3 style="margin-top:18px">Máte materiál?</h3>
+          <p style="margin:0">Palety, dubové odrezky, tehly s dierami, bambus, štrk alebo piesok — všetko sa zíde. Napíšte, prídem si po to.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Sadni si na lúku · projekt pre Tatra Academy Blue Challenge 2026, kategória Udržateľnosť</span>
+    <span>Mapové podklady © prispievatelia <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a></span>
+  </div>
+</footer>
+
+<script>
+// ---------- anatómia lúky ----------
+const ANAT = [
+  {n:"Hmyzí hotel", who:"včely samotárky, lienky, zlatoočky, ucholaky", build:"deti — z paliet, bambusu, dutých stebiel, šišiek a tehál s dierami", cost:"40 €", txt:"Drevený rám rozdelený na priehradky. Každá priehradka je iný byt: bambusové trubičky pre včely samotárky, šišky pre lienky, slama pre zlatoočky, tehly s dierami pre chrobáky. Stavia sa na dielni za jedno popoludnie; postaví sa čelom na juh a nad zem, aby doň nepršalo."},
+  {n:"Domčeky pre včely samotárky", who:"murárky, čalúnice a ďalšie včely samotárky — nebodajú a nerojia sa", build:"deti — vŕtanie dubových alebo bukových blokov vrtákmi 3 – 8 mm", cost:"15 €", txt:"Tvrdý drevený blok s desiatkami navŕtaných dier rôznych priemerov. Samička do diery nakladie vajíčka, zamuruje ju blatom a na jar vyletia nové včely. Vŕtanie je najobľúbenejšia časť dielne — každé dieťa si urobí svoj blok."},
+  {n:"Pieskovisko pre hmyz", who:"zemné včely, pieskovky, samotárske osy, svižníky", build:"deti a školník — kopček holého piesku 1 × 1 m, 30 cm vysoký", cost:"15 €", txt:"Väčšina divých včiel nebýva v hoteli, ale v zemi. Kopček holého piesku na slnečnom mieste je pre ne to, čo pre nás sídlisko. Raz za rok sa z neho odstráni tráva, inak sa oň netreba starať."},
+  {n:"Hromada kameňov a dreva", who:"jašterice, ježkovia, ropuchy, chrobáky, slimáky", build:"deti — kamene a hrubé konáre, ktoré sa nájdu vo dvore alebo prinesú z okolia", cost:"0 €", txt:"Kopa kameňov a kmeňov na tienistom okraji lúky. Kamene sa cez deň nahrejú a jašterice sa na nich vyhrievajú, pod nimi zimujú ropuchy a ježko. Drevo sa pomaly rozkladá a živí desiatky druhov chrobákov a húb."},
+  {n:"Plytké napájadlo", who:"včely, motýle, vtáky, ježkovia", build:"deti — plytká miska alebo podmiska s kamienkami", cost:"10 €", txt:"Hmyz sa v hlbokej vode utopí. Plytká miska s kamienkami, na ktorých sa dá pristáť a napiť, je pre lúku v horúčave dôležitejšia než čokoľvek iné. Deti ju dolievajú pri každej návšteve — v lete každý deň."},
+  {n:"Búdky pre vtáky a netopiere", who:"sýkorky, vrabce, žltochvosty; netopiere", build:"deti — z dosiek podľa výkresu, zavesenie 3 – 4 m vysoko", cost:"30 €", txt:"Vtáky a netopiere lúku prirodzene strážia: jedna sýkorka nakŕmi mladé stovkami húseníc, netopier chytí za noc tisíce komárov. Búdky vešiame na strom alebo stenu budovy do konca februára, aby ich obyvatelia stihli obsadiť."},
+  {n:"Informačná tabuľa", who:"ľudia, ktorí idú okolo a pýtajú sa, prečo je tu nepokosené", build:"deti — text a kresby, tlač a laminovanie, drevený stĺpik", cost:"45 €", txt:"Najdôležitejší prvok pre okolie. Vysvetľuje, že lúka nie je zanedbaná, ale zámerná: čo tam kvitne, kto tam býva a prečo sa kosí len dvakrát. Bez tabule príde sťažnosť, s tabuľou príde záujem. Text a kresby sú od detí."},
+];
+const info = document.getElementById("anat-info"), chips = document.getElementById("anat-chips");
+function showAnat(k){
+  const a = ANAT[k];
+  info.innerHTML = `<span class="tag">Prvok ${k+1} zo 7</span><h3>${a.n}</h3><p>${a.txt}</p><dl><dt>Kto tu býva</dt><dd>${a.who}</dd><dt>Kto to stavia</dt><dd>${a.build}</dd><dt>Materiál</dt><dd>${a.cost}</dd></dl>`;
+  document.querySelectorAll(".hot").forEach(h => h.classList.toggle("on", +h.dataset.k === k));
+  document.querySelectorAll(".chip").forEach((c,i) => c.classList.toggle("on", i === k));
+}
+ANAT.forEach((a,i) => { const b = document.createElement("button"); b.type="button"; b.className="chip"; b.textContent = (i+1)+" · "+a.n; b.onclick = () => showAnat(i); chips.appendChild(b); });
+document.querySelectorAll(".hot").forEach(h => h.addEventListener("click", () => showAnat(+h.dataset.k)));
+showAnat(0);
+
+// ---------- rok na lúke ----------
+const YEAR = [
+  ["Jan","búdky hore, zápis „pred“","sow"],["Feb","hromada kameňov a dreva","sow"],["Mar","prvé klíčky","bloom"],["Apr","prvé kvety, včely v domčekoch","bloom"],
+  ["Máj","vrchol jarného kvitnutia","bloom"],["Jún","Deň na lúke · 1. kosenie","mow"],["Júl","motýle a kobylky","bloom"],["Aug","druhá vlna kvitnutia","bloom"],
+  ["Sep","2. kosenie · zápis „po“","mow"],["Okt","výsev nových lúk, dielňa","sow"],["Nov","semená v pôde, tabuľa","sow"],["Dec","vyhodnotenie roka","sow"],
+];
+document.getElementById("year").innerHTML = YEAR.map(m => `<div class="mo ${m[2]}"><b>${m[0]}</b>${m[1]}</div>`).join("");
+
+// ---------- kalkulačka ----------
+const OPTS = [
+  {n:"Regionálne lúčne semená", s:"4 g/m², zmes pre stredné Slovensko", seed:true},
+  {n:"Hmyzí hotel", s:"rám, bambus, tehly, šišky", p:40, on:true},
+  {n:"Domčeky pre včely samotárky", s:"3 tvrdé bloky, vrtáky", p:15, on:true},
+  {n:"Pieskovisko pre hmyz", s:"0,3 m³ hrubého piesku", p:15, on:true},
+  {n:"Hromada kameňov a dreva", s:"materiál z okolia", p:0, on:true},
+  {n:"Plytké napájadlo", s:"miska + kamienky", p:10, on:true},
+  {n:"Búdky pre vtáky a netopiere", s:"1 + 1, dosky a skrutky", p:30, on:true},
+  {n:"Informačná tabuľa", s:"tlač A2, laminácia, stĺpik", p:45, on:true},
+  {n:"Lupy a určovacie karty", s:"na pozorovanie hmyzu, hrable a rukavice má škola", p:15, on:true},
+];
+const optsEl = document.getElementById("opts");
+OPTS.forEach((o,i) => {
+  const l = document.createElement("label"); l.className = "opt";
+  l.innerHTML = `<input type="checkbox" data-i="${i}" ${o.on||o.seed?"checked":""} ${o.seed?"disabled":""}><span><b>${o.n}</b><small>${o.s}</small></span><span class="pr" id="pr-${i}"></span>`;
+  optsEl.appendChild(l);
+});
+const fmt = n => n.toLocaleString("sk-SK");
+function calc(){
+  const m2 = +document.getElementById("area").value;
+  const seedG = m2 * 4, seedCost = seedG / 1000 * 100;
+  document.getElementById("m2").textContent = fmt(m2);
+  document.getElementById("t-m2").textContent = fmt(m2);
+  document.getElementById("m2cmp").textContent = m2 < 100 ? "približne plocha jednej triedy" : m2 < 300 ? "približne polovica školského ihriska na vybíjanú" : m2 < 600 ? "približne jedno školské ihrisko na vybíjanú" : "približne dve školské ihriská na vybíjanú";
+  document.getElementById("o-seed").textContent = seedG >= 1000 ? (seedG/1000).toLocaleString("sk-SK",{maximumFractionDigits:1})+" kg" : fmt(seedG)+" g";
+  document.getElementById("o-seedcost").textContent = Math.round(seedCost)+" €";
+  const mows = 5, hours = m2 / 800 * mows, fuel = hours * 1.0, co2 = fuel * 2.3;
+  document.getElementById("o-mow").textContent = mows+" kosení";
+  document.getElementById("o-fuel").textContent = fuel.toLocaleString("sk-SK",{maximumFractionDigits:1})+" l";
+  document.getElementById("o-co2").textContent = co2.toLocaleString("sk-SK",{maximumFractionDigits:0})+" kg";
+  const plants = Math.min(50, 20 + Math.round(m2 / 40));
+  document.getElementById("o-species").textContent = plants;
+  document.getElementById("o-insects").textContent = (plants * 2)+"+";
+  let sum = 0;
+  OPTS.forEach((o,i) => {
+    const price = o.seed ? seedCost : o.p;
+    document.getElementById("pr-"+i).textContent = Math.round(price)+" €";
+    const cb = optsEl.querySelector(`input[data-i="${i}"]`);
+    if (cb.checked) sum += price;
+  });
+  document.getElementById("t-sum").textContent = fmt(Math.round(sum))+" €";
+}
+document.getElementById("area").addEventListener("input", calc);
+optsEl.addEventListener("change", calc);
+calc();
+
+// ---------- mapa ----------
+const SITES = [
+  {n:"Rimavská Sobota", lat:48.383, lng:20.020, st:"pilot", t:"Prvá lúka: 200 m² trávnika, výsev v októbri 2026 s partiou kamarátov."},
+  {n:"Banská Bystrica", lat:48.736, lng:19.146},{n:"Zvolen", lat:48.576, lng:19.125},{n:"Brezno", lat:48.805, lng:19.640},
+  {n:"Lučenec", lat:48.331, lng:19.667},{n:"Revúca", lat:48.683, lng:20.117},{n:"Žiar nad Hronom", lat:48.591, lng:18.850},
+  {n:"Žarnovica", lat:48.481, lng:18.718},{n:"Banská Štiavnica", lat:48.458, lng:18.897},{n:"Detva", lat:48.557, lng:19.421},
+  {n:"Krupina", lat:48.355, lng:19.065},{n:"Veľký Krtíš", lat:48.212, lng:19.336},{n:"Poltár", lat:48.430, lng:19.795},
+  {n:"Tornaľa", lat:48.421, lng:20.323},{n:"Hnúšťa", lat:48.575, lng:19.953},
+];
+const map = L.map("map", {scrollWheelZoom:false}).setView([48.55, 19.45], 8);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(map);
+const sitesEl = document.getElementById("sites");
+SITES.forEach(s => {
+  const pilot = s.st === "pilot";
+  const m = L.circleMarker([s.lat, s.lng], {radius: pilot ? 11 : 8, color:"#fff", weight:2, fillColor: pilot ? "#F2B705" : "#3B6D11", fillOpacity:.95}).addTo(map);
+  m.bindPopup(`<b>${s.n}</b>${pilot ? s.t : "Hľadáme školu, detský domov, CVČ alebo bytovku, ktorá dá lúke 100 – 500 m²."}<br><a href="#chcem" onclick="document.getElementById('mesto').value='${s.n}'">Prihlásiť sa</a>`);
+  const d = document.createElement("div"); d.className = "site";
+  d.innerHTML = `<span>${s.n}</span><span class="st ${pilot?"pilot":"open"}">${pilot ? "pilot · jeseň 2026" : "hľadáme plochu"}</span>`;
+  d.onclick = () => { map.setView([s.lat, s.lng], 11); m.openPopup(); };
+  sitesEl.appendChild(d);
+});
+
+// ---------- formulár (FormSubmit AJAX) ----------
+const F_ENDPOINT = "https://formsubmit.co/ajax/sadnisinaluku@gmail.com";
+const form = document.getElementById("f-luka");
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("send-btn"), err = document.getElementById("f-err");
+  err.classList.remove("on"); btn.disabled = true; btn.textContent = "Odosielam…";
+  const fd = new FormData(form);
+  const org = fd.get("organizacia"), mesto = fd.get("mesto");
+  const body = {
+    _subject: `Sadni si na lúku — prihláška: ${org}, ${mesto}`,
+    _template: "table",
+    _autoresponse: `Ďakujem za prihlášku do projektu Sadni si na lúku (${org}, ${mesto}). Ozvem sa do týždňa a dohodneme obhliadku plochy a termín výsevu. Milan Krett`,
+    _replyto: fd.get("email"),
+  };
+  fd.forEach((v,k) => { if (k !== "_honey") body[k] = v; });
+  try {
+    const r = await fetch(F_ENDPOINT, {method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"}, body: JSON.stringify(body)});
+    if (!r.ok) throw new Error(r.status);
+    document.getElementById("f-thanks-text").textContent = `${org} (${mesto}) je zapísaná. Ďalší krok je obhliadka plochy — vymeriame ju a dohodneme termín výsevu.`;
+    form.hidden = true; document.getElementById("f-thanks").classList.add("on");
+  } catch (x) { err.classList.add("on"); }
+  btn.disabled = false; btn.textContent = "Odoslať prihlášku";
+});
+</script>
+</body>
+</html>
