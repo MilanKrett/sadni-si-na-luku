@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Denník lúky — Sadni si na lúku</title>
+<meta name="description" content="Zdieľaný denník nálezov pre projekt Sadni si na lúku: zapíšte druh, ktorý ste na lúke našli, a appka porovná, koľko druhov bolo na trávniku pred výsevom a koľko ich je na lúke teraz.">
+<link rel="icon" type="image/png" href="../logo/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#3B6D11; --green-d:#2C520C; --green-l:#E4EFD6; --green-xl:#F1F6E9;
+  --sun:#F2B705; --sun-d:#8A6A00; --sun-l:#FDF1C7;
+  --sky:#2B5A78; --sky-l:#DCEAF3;
+  --clay:#A0451B; --clay-l:#FBE3D1;
+  --ink:#222A1B; --muted:#5F6950; --cream:#FBF8EF; --card:#FFFFFF; --line:#E1DCCB;
+  --r:16px; --serif:"Fraunces",Georgia,serif; --sans:"Nunito",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.5;font-size:16px}
+img{max-width:100%;display:block}
+a{color:var(--green-d)}
+h1,h2,h3{font-family:var(--serif);line-height:1.15;margin:0 0 .3em;font-weight:700}
+p{margin:0 0 .8em}
+.muted{color:var(--muted)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+
+header.top{position:sticky;top:0;z-index:10;background:var(--cream);border-bottom:1px solid var(--line);padding:14px 0;}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brandline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brandline h1{font-size:1.4rem}
+.brandline span{font-size:.8rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.back{font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted)}
+.back:hover{color:var(--green-d)}
+.livepill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:800;color:var(--green-d);background:var(--green-l);padding:5px 10px;border-radius:999px}
+.livepill i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.intro{padding:26px 0 6px;max-width:760px}
+
+.chipbar{display:flex;gap:8px;overflow-x:auto;padding:10px 0 22px}
+.sitechip{flex:0 0 auto;display:flex;flex-direction:column;gap:2px;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;cursor:pointer;text-align:left;min-width:126px}
+.sitechip b{font-family:var(--serif);font-size:.92rem;white-space:nowrap}
+.sitechip small{font-size:.74rem;color:var(--muted);font-weight:700}
+.sitechip.on{border-color:var(--green);background:var(--green-xl)}
+.sitechip .pilot-tag{font-size:.62rem;font-weight:800;color:var(--sun-d);text-transform:uppercase;letter-spacing:.05em}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:26px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.stat b{display:block;font-family:var(--serif);font-size:2.1rem;color:var(--green);line-height:1}
+.stat span{font-size:.8rem;color:var(--muted);font-weight:700}
+.stat.delta b{color:var(--sun-d)}
+@media(max-width:600px){.stats{grid-template-columns:1fr 1fr 1fr;gap:8px}.stat{padding:10px}.stat b{font-size:1.5rem}}
+
+.dash{display:grid;grid-template-columns:.85fr 1.15fr;gap:20px;align-items:start;margin-bottom:34px}
+@media(max-width:860px){.dash{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.panel h2{font-size:1.1rem;margin-bottom:14px}
+
+form{display:grid;gap:12px}
+label{font-weight:800;font-size:.82rem;display:block;margin-bottom:3px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--cream);color:var(--ink)}
+textarea{min-height:60px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.row2{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--green);color:#fff;font-weight:800;padding:12px 18px;border-radius:11px;border:0;cursor:pointer;font-size:.95rem}
+.btn:hover{background:var(--green-d)}
+.btn:disabled{opacity:.55;cursor:wait}
+.formnote{font-size:.8rem;color:var(--muted);margin:0}
+.formerr{font-size:.85rem;color:#B23B2E;display:none}
+.formerr.on{display:block}
+
+.feed{display:flex;flex-direction:column;gap:10px;max-height:600px;overflow-y:auto;padding-right:2px}
+.sighting{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--cream)}
+.sighting h3{font-size:1rem;margin:0 0 3px;font-family:var(--sans);font-weight:800}
+.sighting .meta{font-size:.78rem;color:var(--muted)}
+.cat{display:inline-block;font-size:.7rem;font-weight:800;padding:2px 9px;border-radius:999px;margin-right:6px;vertical-align:1px}
+.confirm{display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:800;font-size:.74rem;color:var(--muted)}
+.confirm:hover{border-color:var(--green);color:var(--green-d)}
+.confirm.on{border-color:var(--green);color:var(--green-d);background:var(--green-l)}
+.confirm b{font-size:1rem;font-family:var(--serif);color:var(--ink)}
+.demotag{font-size:.66rem;font-weight:800;color:var(--sun-d);background:var(--sun-l);padding:1px 7px;border-radius:999px;margin-left:6px}
+.empty{padding:32px 10px;text-align:center;color:var(--muted);font-size:.9rem}
+
+.board{display:flex;flex-direction:column;gap:9px}
+.brow{display:grid;grid-template-columns:140px 1fr 70px;gap:10px;align-items:center}
+@media(max-width:600px){.brow{grid-template-columns:100px 1fr 56px;font-size:.85rem}}
+.brow .nm{font-weight:800;font-size:.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .nm .pilot-tag{display:block;font-size:.62rem;color:var(--sun-d);font-weight:800}
+.track{position:relative;height:20px;background:var(--green-xl);border-radius:999px;overflow:hidden}
+.track .fill{position:absolute;inset:0 auto 0 0;background:var(--green);border-radius:999px;transition:width .4s}
+.track .base{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.35}
+.brow .dl{text-align:right;font-weight:800;color:var(--sun-d);font-size:.84rem}
+
+footer.foot{padding:30px 0 40px;font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);margin-top:10px}
+footer.foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brandline">
+      <h1>🌾 Denník lúky</h1>
+      <span>Sadni si na lúku · prieskum druhov</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <a class="back" href="../index.html#prieskum">← Späť na hlavný web</a>
+      <span class="livepill" id="livepill"><i></i>naživo</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <p>Spoločný denník pre všetky lúky projektu. Kto nájde na lúke nový druh, zapíše ho sem. Appka rátaním jedinečných druhov porovnáva, koľko ich bolo <b>na trávniku pred výsevom</b> a koľko ich je <b>na lúke teraz</b>.</p>
+  </div>
+
+  <div class="chipbar" id="chipbar"></div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="dash">
+    <section class="panel">
+      <h2>Zapísať nález</h2>
+      <form id="f-add">
+        <div>
+          <label for="in-species">Druh *</label>
+          <input id="in-species" name="species" list="species-list" required placeholder="napr. Nevädza poľná" autocomplete="off">
+          <datalist id="species-list"></datalist>
+        </div>
+        <div class="row2">
+          <div>
+            <label for="in-cat">Kategória *</label>
+            <select id="in-cat" name="category">
+              <option value="rastlina">Rastlina</option>
+              <option value="hmyz">Hmyz</option>
+              <option value="vtak">Vták</option>
+              <option value="ine">Iné (obojživelník, cicavec…)</option>
+            </select>
+          </div>
+          <div>
+            <label for="in-reporter">Kto zapísal</label>
+            <input id="in-reporter" name="reporter" placeholder="napr. Team 6.A">
+          </div>
+        </div>
+        <div>
+          <label for="in-note">Poznámka</label>
+          <textarea id="in-note" name="note" placeholder="kde presne na lúke, čo robil…"></textarea>
+        </div>
+        <button class="btn" type="submit" id="btn-add">Zapísať nález</button>
+        <p class="formerr" id="f-err"></p>
+        <p class="formnote">Zapisujete pre lúku: <b id="f-sitename">—</b></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Živý záznam — <span id="feed-sitename">—</span></h2>
+      <div class="feed" id="feed"></div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-bottom:30px">
+    <h2>Rebríček lúk — koľko druhov sa vrátilo</h2>
+    <p class="muted" style="font-size:.86rem;margin-bottom:16px">Čiarka na pruhu je počet druhov na trávniku pred výsevom, plný pruh je súčasný počet zapísaných druhov na lúke.</p>
+    <div class="board" id="board"></div>
+  </section>
+
+  <footer class="foot">
+    Denník lúky · appka pre projekt <a href="../index.html"><b>Sadni si na lúku</b></a> (Tatra Academy Blue Challenge 2026). Beží na Firebase — zdieľané naživo, zadarmo, prístupné komukoľvek. Skutočný terénny prieskum bude bežať aj v aplikácii iNaturalist.
+  </footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAg7zQoeKbpfa6baol8osEM8CnxATV5gBs",
+  authDomain: "sadni-si-na-luku.firebaseapp.com",
+  projectId: "sadni-si-na-luku",
+  storageBucket: "sadni-si-na-luku.firebasestorage.app",
+  messagingSenderId: "960825768746",
+  appId: "1:960825768746:web:0575bf185d738ac9a67c53"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const SITES = [
+  {key:"rimavska-sobota", n:"Rimavská Sobota", pred:8, pilot:true},
+  {key:"banska-bystrica", n:"Banská Bystrica", pred:7},
+  {key:"zvolen", n:"Zvolen", pred:6},
+  {key:"brezno", n:"Brezno", pred:7},
+  {key:"lucenec", n:"Lučenec", pred:8},
+  {key:"revuca", n:"Revúca", pred:6},
+  {key:"ziar-nad-hronom", n:"Žiar nad Hronom", pred:7},
+  {key:"zarnovica", n:"Žarnovica", pred:6},
+  {key:"banska-stiavnica", n:"Banská Štiavnica", pred:7},
+  {key:"detva", n:"Detva", pred:6},
+  {key:"krupina", n:"Krupina", pred:7},
+  {key:"velky-krtis", n:"Veľký Krtíš", pred:6},
+  {key:"poltar", n:"Poltár", pred:7},
+  {key:"tornala", n:"Tornaľa", pred:6},
+  {key:"hnusta", n:"Hnúšťa", pred:7},
+];
+const CATS = {
+  rastlina:{label:"Rastlina", fg:"var(--green-d)", bg:"var(--green-l)", icon:"🌼"},
+  hmyz:{label:"Hmyz", fg:"var(--sun-d)", bg:"var(--sun-l)", icon:"🐝"},
+  vtak:{label:"Vták", fg:"var(--sky)", bg:"var(--sky-l)", icon:"🐦"},
+  ine:{label:"Iné", fg:"var(--clay)", bg:"var(--clay-l)", icon:"🦔"},
+};
+const SPECIES_SUGGEST = [
+  "Nevädza poľná","Mak vlčí","Margaréta biela","Ďatelina lúčna","Púpava lekárska",
+  "Zvonček konáčovitý","Ľubovník bodkovaný","Rebríček obyčajný","Iskerník prudký","Materina dúška",
+  "Včela medonosná","Čmeliak zemný","Babôčka pávooký","Vážka bežná","Lienka sedembodková",
+  "Kobylka zelená","Osa lesná","Roháč obyčajný","Mravec lesný",
+  "Sýkorka veľká","Vrabec domový","Žltochvost domový","Drozd čierny","Škovránok poľný",
+  "Jašterica bystrá","Ropucha bradavičnatá","Slepúch lámavý","Ježko východoeurópsky",
+];
+document.getElementById("species-list").innerHTML = SPECIES_SUGGEST.map(s=>`<option value="${s}">`).join("");
+
+let allDocs = [];
+let currentSite = SITES[0].key;
+
+const norm = s => (s||"").trim().toLowerCase();
+const fmt = n => n.toLocaleString("sk-SK");
+
+function speciesCount(site){
+  const set = new Set();
+  allDocs.filter(d=>d.site===site).forEach(d=>{ if(d.species) set.add(norm(d.species)); });
+  return set.size;
+}
+function siteMeta(key){ return SITES.find(s=>s.key===key); }
+
+function renderChips(){
+  const bar = document.getElementById("chipbar");
+  bar.innerHTML = "";
+  SITES.forEach(s=>{
+    const po = speciesCount(s.key), delta = po - s.pred;
+    const b = document.createElement("button");
+    b.type="button"; b.className = "sitechip"+(s.key===currentSite?" on":"");
+    b.innerHTML = (s.pilot?`<span class="pilot-tag">pilot 2026</span>`:"") + `<b>${s.n}</b><small>${po} druhov ${delta>=0?"· +"+delta:""}</small>`;
+    b.onclick = ()=>{ currentSite = s.key; renderAll(); };
+    bar.appendChild(b);
+  });
+}
+
+function renderStats(){
+  const s = siteMeta(currentSite);
+  const po = speciesCount(currentSite), delta = po - s.pred;
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><b>${fmt(s.pred)}</b><span>druhov · trávnik pred</span></div>
+    <div class="stat"><b>${fmt(po)}</b><span>druhov · lúka teraz</span></div>
+    <div class="stat delta"><b>${delta>=0?"+":""}${fmt(delta)}</b><span>vrátených druhov</span></div>`;
+  document.getElementById("f-sitename").textContent = s.n;
+  document.getElementById("feed-sitename").textContent = s.n;
+}
+
+function timeAgo(iso){
+  const d = new Date(iso); if(isNaN(d)) return "";
+  const mins = Math.round((Date.now()-d.getTime())/60000);
+  if(mins < 1) return "práve teraz";
+  if(mins < 60) return mins+" min";
+  const hrs = Math.round(mins/60);
+  if(hrs < 24) return hrs+" h";
+  const days = Math.round(hrs/24);
+  if(days < 30) return days+" d";
+  return d.toLocaleDateString("sk-SK");
+}
+
+let confirmedLocal = new Set();
+try{ confirmedLocal = new Set(JSON.parse(localStorage.getItem("dl-confirmed")||"[]")); }catch(e){}
+function saveConfirmedLocal(){ try{ localStorage.setItem("dl-confirmed", JSON.stringify([...confirmedLocal])); }catch(e){} }
+
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+function renderFeed(){
+  const el = document.getElementById("feed");
+  const items = allDocs.filter(d=>d.site===currentSite).sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
+  if(!items.length){ el.innerHTML = `<div class="empty">Zatiaľ žiadny zápis pre ${siteMeta(currentSite).n}. Buďte prví.</div>`; return; }
+  el.innerHTML = items.map(d=>{
+    const c = CATS[d.category] || CATS.ine;
+    const confirmed = confirmedLocal.has(d.id);
+    return `<div class="sighting">
+      <div>
+        <h3>${c.icon} ${escapeHtml(d.species)}${d.demo?'<span class="demotag">ukážka</span>':''}</h3>
+        <span class="cat" style="color:${c.fg};background:${c.bg}">${c.label}</span>
+        <div class="meta">${escapeHtml(d.reporter||"Anonym")} · ${timeAgo(d.createdAt)}${d.note?" · "+escapeHtml(d.note):""}</div>
+      </div>
+      <button class="confirm ${confirmed?"on":""}" data-id="${d.id}" data-n="${d.confirmations||0}">
+        <b>${d.confirmations||0}</b>${confirmed?"potvrdené":"potvrdiť"}
+      </button>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".confirm").forEach(btn=>{
+    btn.onclick = ()=> confirmSighting(btn.dataset.id, +btn.dataset.n);
+  });
+}
+
+async function confirmSighting(id, currentN){
+  if(confirmedLocal.has(id)) return;
+  confirmedLocal.add(id); saveConfirmedLocal(); renderFeed();
+  try{ await updateDoc(doc(db,"sightings",id), {confirmations: currentN+1}); }
+  catch(e){ console.error(e); }
+}
+
+function renderBoard(){
+  const rows = SITES.map(s=>({...s, po: speciesCount(s.key)}));
+  const maxPo = Math.max(...rows.map(r=>r.po), 1);
+  rows.sort((a,b)=> (b.po-b.pred) - (a.po-a.pred));
+  document.getElementById("board").innerHTML = rows.map(r=>{
+    const delta = r.po - r.pred;
+    return `<div class="brow">
+      <div class="nm">${r.n}${r.pilot?'<span class="pilot-tag">pilot</span>':''}</div>
+      <div class="track"><div class="base" style="left:${(r.pred/Math.max(maxPo,r.pred))*100}%"></div><div class="fill" style="width:${(r.po/Math.max(maxPo,r.pred))*100}%"></div></div>
+      <div class="dl">${delta>=0?"+":""}${delta}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderAll(){ renderChips(); renderStats(); renderFeed(); renderBoard(); }
+
+document.getElementById("f-add").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const err = document.getElementById("f-err"); err.classList.remove("on");
+  const species = document.getElementById("in-species").value.trim();
+  const category = document.getElementById("in-cat").value;
+  const reporter = document.getElementById("in-reporter").value.trim();
+  const note = document.getElementById("in-note").value.trim();
+  if(!species){ err.textContent = "Napíšte, aký druh ste našli."; err.classList.add("on"); return; }
+  const btn = document.getElementById("btn-add");
+  btn.disabled = true; btn.textContent = "Ukladám…";
+  try{
+    await addDoc(collection(db,"sightings"), {
+      site: currentSite, species, category, reporter, note,
+      confirmations: 0, demo: false,
+      createdAt: new Date().toISOString(),
+    });
+    e.target.reset();
+  }catch(x){
+    console.error(x);
+    err.textContent = "Zápis sa nepodarilo uložiť. Skúste to ešte raz.";
+    err.classList.add("on");
+  }
+  btn.disabled = false; btn.textContent = "Zapísať nález";
+});
+
+const q = query(collection(db,"sightings"), orderBy("createdAt","desc"), limit(500));
+onSnapshot(q, snap=>{
+  allDocs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  renderAll();
+  document.getElementById("livepill").innerHTML = "<i></i>naživo";
+}, err=>{
+  console.error(err);
+  document.getElementById("livepill").textContent = "offline";
+});
+renderAll();
+</script>
+</body>
+</html>
